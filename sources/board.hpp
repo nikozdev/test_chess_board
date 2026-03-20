@@ -1,14 +1,14 @@
 #pragma once
 
 #include <array>
-#include <vector>
-#include <random>
-#include <iostream>
-#include <mutex>
-#include <condition_variable>
-#include <thread>
-#include <latch>
 #include <chrono>
+#include <condition_variable>
+#include <iostream>
+#include <latch>
+#include <mutex>
+#include <random>
+#include <thread>
+#include <vector>
 
 constexpr int BOARD_SIZE = 8;
 
@@ -25,18 +25,13 @@ struct Rook {
 
 class Board {
 public: // external methods
-    Board() :
-        grid{},
-        randevice(),
-        randengine(randevice()),
-        randist(0, BOARD_SIZE - 1)
-    {
+    Board() : grid{}, randevice(), randengine(randevice()), randist(0, BOARD_SIZE - 1) {
         for (auto& row : grid) {
             row.fill(nullptr);
         }
     }
 
-    //checkers
+    // checkers
 
     bool has_free_cell(Cell cell) const {
         return grid[cell.row][cell.col] == nullptr;
@@ -47,13 +42,17 @@ public: // external methods
             int step = (dest.row > from.row) ? 1 : -1;
             for (int r = from.row + step; r != dest.row; r += step) {
                 Cell cell{.col = from.col, .row = r};
-                if (!has_free_cell(cell)) return false;
+                if (!has_free_cell(cell)) {
+                    return false;
+                }
             }
         } else {
             int step = (dest.col > from.col) ? 1 : -1;
             for (int c = from.col + step; c != dest.col; c += step) {
                 Cell cell{.col = c, .row = from.row};
-                if (!has_free_cell(cell)) return false;
+                if (!has_free_cell(cell)) {
+                    return false;
+                }
             }
         }
         return has_free_cell(dest);
@@ -69,10 +68,14 @@ public: // external methods
         bool hor = randist(randengine) % 2 == 0;
         int pos = randist(randengine);
         if (hor) {
-            while (pos == rook.cell.col) pos = randist(randengine);
+            while (pos == rook.cell.col) {
+                pos = randist(randengine);
+            }
             return {pos, rook.cell.row};
         } else {
-            while (pos == rook.cell.row) pos = randist(randengine);
+            while (pos == rook.cell.row) {
+                pos = randist(randengine);
+            }
             return {rook.cell.col, pos};
         }
     }
@@ -112,10 +115,7 @@ public: // external methods
         std::latch start_latch(rooks.size());
         std::vector<std::jthread> threads;
         for (auto& rook : rooks) {
-            threads.emplace_back(
-                &Board::run_rook, this,
-                std::ref(rook), move_limit, std::ref(start_latch)
-            );
+            threads.emplace_back(&Board::run_rook, this, std::ref(rook), move_limit, std::ref(start_latch));
         }
         for (auto& t : threads) {
             t.join();
@@ -145,7 +145,6 @@ public: // external methods
     }
 
 private: // internal methods
-
     // logic
 
     void run_rook(Rook& rook, int move_limit, std::latch& start_latch) {
@@ -157,10 +156,7 @@ private: // internal methods
 
             if (!has_free_path(rook.cell, dest)) {
                 log_blocked(rook, dest);
-                bool freed = board_changed.wait_for(
-                    lock, std::chrono::seconds(5),
-                    [&] { return has_free_path(rook.cell, dest); }
-                );
+                bool freed = board_changed.wait_for(lock, std::chrono::seconds(5), [&] { return has_free_path(rook.cell, dest); });
                 if (!freed) {
                     log_timeout(rook, dest);
                     continue;
@@ -183,9 +179,7 @@ private: // internal methods
 
     void log_move(const Rook& rook, Cell from) {
         std::lock_guard lock(print_mutex);
-        std::cout
-            << "rook " << rook.id
-            << " move " << rook.move_count << ": ";
+        std::cout << "rook " << rook.id << " move " << rook.move_count << ": ";
         print_cell(from);
         std::cout << " -> ";
         print_cell(rook.cell);
@@ -216,7 +210,9 @@ private: // internal methods
         return pause_dist(randengine);
     }
 
-    static char col_to_char(int col) { return 'a' + col; }
+    static char col_to_char(int col) {
+        return 'a' + col;
+    }
 
     static void print_cell(Cell cell) {
         std::cout << col_to_char(cell.col) << (cell.row + 1);
