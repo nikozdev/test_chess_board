@@ -1,7 +1,7 @@
 #include "main.hpp"
 
-#include <cstdlib>
 #include <chrono>
+#include <cstdlib>
 
 constexpr int ROOK_COUNT_DEFAULT = 5;
 constexpr int ROOK_COUNT_MIN = 4;
@@ -15,10 +15,7 @@ int main(int argc, char* argv[]) {
     if (argc > 1) {
         rook_count = std::atoi(argv[1]);
         if (rook_count < ROOK_COUNT_MIN || rook_count > ROOK_COUNT_MAX) {
-            std::cerr
-                << "error: rook count must be "
-                << ROOK_COUNT_MIN << "-" << ROOK_COUNT_MAX
-                << ", got " << rook_count << "\n";
+            std::cerr << "error: rook count must be " << ROOK_COUNT_MIN << "-" << ROOK_COUNT_MAX << ", got " << rook_count << "\n";
             return 1;
         }
     }
@@ -31,23 +28,25 @@ int main(int argc, char* argv[]) {
     Board board;
     board.place_rooks_random(rooks);
 
-    std::cout << "=== Chess Board ===" << "\n";
-    std::cout << rook_count << " rooks placed:" << "\n\n";
+    std::cout << "=== Chess Board ==="
+              << "\n";
+    std::cout << rook_count << " rooks placed:"
+              << "\n\n";
     board.print();
     std::cout << "\n";
 
     auto since = std::chrono::steady_clock::now();
     board.run_rooks(rooks, MOVE_LIMIT);
     auto until = std::chrono::steady_clock::now();
-    auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(
-        until - since
-    );
+    auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(until - since);
 
     std::cout << "\nfinal board:\n";
     board.print();
 
-    std::cout << "\n=== Summary ===" << "\n";
-    std::cout << "timing: " << timing.count() << "ms" << "\n";
+    std::cout << "\n=== Summary ==="
+              << "\n";
+    std::cout << "timing: " << timing.count() << "ms"
+              << "\n";
     for (const auto& rook : rooks) {
         std::cout << "rook " << rook.id << ": " << rook.move_count << " moves\n";
     }
