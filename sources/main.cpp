@@ -1,6 +1,7 @@
 #include "main.hpp"
 
 #include <cstdlib>
+#include <chrono>
 
 constexpr int ROOK_COUNT_DEFAULT = 5;
 constexpr int ROOK_COUNT_MIN = 4;
@@ -35,10 +36,21 @@ int main(int argc, char* argv[]) {
     board.print();
     std::cout << "\n";
 
+    auto since = std::chrono::steady_clock::now();
     board.run_rooks(rooks, MOVE_LIMIT);
+    auto until = std::chrono::steady_clock::now();
+    auto timing = std::chrono::duration_cast<std::chrono::milliseconds>(
+        until - since
+    );
 
     std::cout << "\nfinal board:\n";
     board.print();
+
+    std::cout << "\n=== Summary ===" << "\n";
+    std::cout << "timing: " << timing.count() << "ms" << "\n";
+    for (const auto& rook : rooks) {
+        std::cout << "rook " << rook.id << ": " << rook.move_count << " moves\n";
+    }
 
     return 0;
 }
