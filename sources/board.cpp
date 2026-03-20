@@ -98,7 +98,7 @@ void Board::move_rook_to_cell(Rook& rook, Cell cell) {
 
 void Board::run_rooks(std::vector<Rook>& rooks, int move_limit) {
     std::latch start_latch(rooks.size());
-    std::vector<std::jthread> threads;
+    std::vector<std::thread> threads;
     for (auto& rook : rooks) {
         threads.emplace_back(&Board::run_rook, this, std::ref(rook), move_limit, std::ref(start_latch));
     }
