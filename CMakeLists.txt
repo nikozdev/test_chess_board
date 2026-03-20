@@ -10,3 +10,6 @@ add_executable(chess_board)
 
 file(GLOB_RECURSE SOURCES sources/*.cpp)
 target_sources(chess_board PRIVATE ${SOURCES})
+
+enable_testing()
+add_test(NAME run_chess_board COMMAND chess_board)
