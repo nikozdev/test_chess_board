@@ -1,13 +1,23 @@
 #pragma once
 
-#include "rook.hpp"
-
 #include <array>
 #include <vector>
 #include <random>
 #include <iostream>
+#include <cstdint>
 
 constexpr int BOARD_SIZE = 8;
+
+struct Cell {
+    int col;
+    int row;
+};
+
+struct Rook {
+    int id;
+    Cell cell;
+    int move_count = 0;
+};
 
 class Board {
 public:
@@ -22,33 +32,68 @@ public:
         }
     }
 
-    bool has_free_cell(int col, int row) const {
-        return grid[row][col] == nullptr;
+    bool has_free_cell(Cell cell) const {
+        return grid[cell.row][cell.col] == nullptr;
     }
 
-    Rook* get_cell(int col, int row) const {
-        return grid[row][col];
+    Rook* get_cell_rook(Cell cell) const {
+        return grid[cell.row][cell.col];
     }
 
-    void set_cell(int col, int row, Rook* rook) {
-        grid[row][col] = rook;
+    void set_cell_rook(Cell cell, Rook* rook) {
+        grid[cell.row][cell.col] = rook;
     }
 
     void place_rooks_random(std::vector<Rook>& rooks) {
         for (auto& rook : rooks) {
-            int col, row;
+            Cell cell;
             do {
-                col = randist(randengine);
-                row = randist(randengine);
-            } while (!has_free_cell(col, row));
-            rook.col = col;
-            rook.row = row;
-            place_rook(rook);
+                cell.col = randist(randengine);
+                cell.row = randist(randengine);
+            } while (!has_free_cell(cell));
+            rook.cell = cell;
+            place_rook_at_cell(rook);
         }
     }
 
-    void place_rook(Rook& rook) {
-        grid[rook.row][rook.col] = &rook;
+    void place_rook_at_cell(Rook& rook) {
+        grid[rook.cell.row][rook.cell.col] = &rook;
+    }
+
+    bool has_free_path(Cell from, Cell dest) const {
+        if (from.col == dest.col) {
+            int step = (dest.row > from.row) ? 1 : -1;
+            for (int r = from.row + step; r != dest.row; r += step) {
+                Cell cell{.col = from.col, .row = r};
+                if (!has_free_cell(cell)) return false;
+            }
+        } else {
+            int step = (dest.col > from.col) ? 1 : -1;
+            for (int c = from.col + step; c != dest.col; c += step) {
+                Cell cell{.col = c, .row = from.row};
+                if (!has_free_cell(cell)) return false;
+            }
+        }
+        return has_free_cell(dest);
+    }
+
+    void move_rook_to_cell(Rook& rook, Cell cell) {
+        grid[rook.cell.row][rook.cell.col] = nullptr;
+        rook.cell = cell;
+        rook.move_count++;
+        grid[cell.row][cell.col] = &rook;
+    }
+
+    Cell get_random_cell(const Rook& rook) {
+        bool hor = randist(randengine) % 2 == 0;
+        int pos = randist(randengine);
+        if (hor) {
+            while (pos == rook.cell.col) pos = randist(randengine);
+            return {pos, rook.cell.row};
+        } else {
+            while (pos == rook.cell.row) pos = randist(randengine);
+            return {rook.cell.col, pos};
+        }
     }
 
     void print() const {
