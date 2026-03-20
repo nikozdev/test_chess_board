@@ -129,7 +129,7 @@ public: // external methods
         for (int col = 0; col < BOARD_SIZE; col++) {
             std::cout << " " << static_cast<char>('a' + col);
         }
-        std::cout << "\n";
+        std::cout << std::endl;
         for (int row = BOARD_SIZE - 1; row >= 0; row--) {
             std::cout << (row + 1) << " ";
             for (int col = 0; col < BOARD_SIZE; col++) {
@@ -140,7 +140,7 @@ public: // external methods
                     std::cout << " .";
                 }
             }
-            std::cout << "\n";
+            std::cout << std::endl;
         }
     }
 
@@ -189,7 +189,7 @@ private: // internal methods
         print_cell(from);
         std::cout << " -> ";
         print_cell(rook.cell);
-        std::cout << "\n";
+        std::cout << std::endl;
     }
 
     void log_blocked(const Rook& rook, Cell dest) {
@@ -198,7 +198,7 @@ private: // internal methods
         print_cell(rook.cell);
         std::cout << " -> ";
         print_cell(dest);
-        std::cout << " (waiting...)\n";
+        std::cout << " (waiting...)" << std::endl;
     }
 
     void log_timeout(const Rook& rook, Cell dest) {
@@ -207,7 +207,7 @@ private: // internal methods
         print_cell(rook.cell);
         std::cout << " -> ";
         print_cell(dest);
-        std::cout << " (re-picking)\n";
+        std::cout << " (re-picking)" << std::endl;
         print();
     }
 
