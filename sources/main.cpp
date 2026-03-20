@@ -1,7 +1,7 @@
 #include "main.hpp"
 
 constexpr int ROOK_COUNT = 5;
-constexpr int MOVE_LIMIT = 10; // 50 for production
+constexpr int MOVE_LIMIT = 50;
 
 int main() {
     std::vector<Rook> rooks(ROOK_COUNT);
