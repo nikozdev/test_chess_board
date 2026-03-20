@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <thread>
 #include <latch>
+#include <chrono>
 
 constexpr int BOARD_SIZE = 8;
 
@@ -153,19 +154,28 @@ private: // internal methods
         while (rook.move_count < move_limit) {
             std::unique_lock lock(board_mutex);
             auto dest = get_random_cell(rook);
+
             if (!has_free_path(rook.cell, dest)) {
-                lock.unlock();
                 log_blocked(rook, dest);
-                continue;
+                bool freed = board_changed.wait_for(
+                    lock, std::chrono::seconds(5),
+                    [&] { return has_free_path(rook.cell, dest); }
+                );
+                if (!freed) {
+                    log_timeout(rook, dest);
+                    continue;
+                }
             }
 
             auto from = rook.cell;
             move_rook_to_cell(rook, dest);
-
             lock.unlock();
             board_changed.notify_all();
 
             log_move(rook, from);
+
+            int pause = get_random_pause();
+            std::this_thread::sleep_for(std::chrono::milliseconds(pause));
         }
     }
 
@@ -188,7 +198,22 @@ private: // internal methods
         print_cell(rook.cell);
         std::cout << " -> ";
         print_cell(dest);
-        std::cout << "\n";
+        std::cout << " (waiting...)\n";
+    }
+
+    void log_timeout(const Rook& rook, Cell dest) {
+        std::lock_guard lock(print_mutex);
+        std::cout << "rook " << rook.id << " timeout: ";
+        print_cell(rook.cell);
+        std::cout << " -> ";
+        print_cell(dest);
+        std::cout << " (re-picking)\n";
+        print();
+    }
+
+    int get_random_pause() {
+        std::uniform_int_distribution<int> pause_dist(200, 300);
+        return pause_dist(randengine);
     }
 
     static char col_to_char(int col) { return 'a' + col; }

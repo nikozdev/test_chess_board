@@ -1,11 +1,29 @@
 #include "main.hpp"
 
-constexpr int ROOK_COUNT = 5;
-constexpr int MOVE_LIMIT = 10; // 50 for production
+#include <cstdlib>
 
-int main() {
-    std::vector<Rook> rooks(ROOK_COUNT);
-    for (int i = 0; i < ROOK_COUNT; i++) {
+constexpr int ROOK_COUNT_DEFAULT = 5;
+constexpr int ROOK_COUNT_MIN = 4;
+constexpr int ROOK_COUNT_MAX = 6;
+#ifndef MOVE_LIMIT
+constexpr int MOVE_LIMIT = 50;
+#endif
+
+int main(int argc, char* argv[]) {
+    int rook_count = ROOK_COUNT_DEFAULT;
+    if (argc > 1) {
+        rook_count = std::atoi(argv[1]);
+        if (rook_count < ROOK_COUNT_MIN || rook_count > ROOK_COUNT_MAX) {
+            std::cerr
+                << "error: rook count must be "
+                << ROOK_COUNT_MIN << "-" << ROOK_COUNT_MAX
+                << ", got " << rook_count << "\n";
+            return 1;
+        }
+    }
+
+    std::vector<Rook> rooks(rook_count);
+    for (int i = 0; i < rook_count; i++) {
         rooks[i].id = i + 1;
     }
 
@@ -13,7 +31,7 @@ int main() {
     board.place_rooks_random(rooks);
 
     std::cout << "=== Chess Board ===" << "\n";
-    std::cout << ROOK_COUNT << " rooks placed:" << "\n\n";
+    std::cout << rook_count << " rooks placed:" << "\n\n";
     board.print();
     std::cout << "\n";
 
