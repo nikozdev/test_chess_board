@@ -1,9 +1,13 @@
 #include "main.hpp"
 
 constexpr int ROOK_COUNT = 5;
-constexpr int MOVE_LIMIT = 50;
+constexpr int MOVE_LIMIT = 10; // 50 for production
 
 static char col_to_char(int col) { return 'a' + col; }
+
+static void print_cell(Cell cell) {
+    std::cout << col_to_char(cell.col) << (cell.row + 1);
+}
 
 int main() {
     std::vector<Rook> rooks(ROOK_COUNT);
@@ -19,28 +23,33 @@ int main() {
     board.print();
     std::cout << "\n";
 
-    Rook& rook = rooks[0];
-    while (rook.move_count < MOVE_LIMIT) {
-        auto dest = board.get_random_cell(rook);
-        if (!board.has_free_path(rook.cell, dest)) {
+    bool all_done = false;
+    while (!all_done) {
+        all_done = true;
+        for (auto& rook : rooks) {
+            if (rook.move_count >= MOVE_LIMIT) continue;
+            all_done = false;
+
+            auto dest = board.get_random_cell(rook);
+            if (!board.has_free_path(rook.cell, dest)) {
+                std::cout << "rook " << rook.id << " blocked: ";
+                print_cell(rook.cell);
+                std::cout << " -> ";
+                print_cell(dest);
+                std::cout << "\n";
+                continue;
+            }
+
+            auto from = rook.cell;
+            board.move_rook_to_cell(rook, dest);
             std::cout
                 << "rook " << rook.id
-                << " blocked: "
-                << col_to_char(rook.cell.col) << (rook.cell.row + 1)
-                << " -> "
-                << col_to_char(dest.col) << (dest.row + 1)
-                << "\n";
-            continue;
+                << " move " << rook.move_count << ": ";
+            print_cell(from);
+            std::cout << " -> ";
+            print_cell(rook.cell);
+            std::cout << "\n";
         }
-        auto from = rook.cell;
-        board.move_rook_to_cell(rook, dest);
-        std::cout
-            << "rook " << rook.id
-            << " move " << rook.move_count << ": "
-            << col_to_char(from.col) << (from.row + 1)
-            << " -> "
-            << col_to_char(rook.cell.col) << (rook.cell.row + 1)
-            << "\n";
     }
 
     std::cout << "\nfinal board:\n";
