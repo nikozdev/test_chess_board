@@ -208,6 +208,7 @@ private: // internal methods
         std::cout << " -> ";
         print_cell(dest);
         std::cout << " (re-picking)\n";
+        print();
     }
 
     int get_random_pause() {
