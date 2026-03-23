@@ -87,11 +87,14 @@ void Board::place_rook_at_cell(Rook& rook) {
     grid[rook.cell.row][rook.cell.col] = &rook;
 }
 
-void Board::move_rook_to_cell(Rook& rook, Cell cell) {
-    grid[rook.cell.row][rook.cell.col] = nullptr;
-    rook.cell = cell;
+void Board::move_rook_to_cell(Rook& rook, Cell dest) {
+    Cell from = rook.cell;
+    grid[from.row][from.col] = nullptr;
+    rook.cell = dest;
     rook.move_count++;
-    grid[cell.row][cell.col] = &rook;
+    grid[dest.row][dest.col] = &rook;
+    row_cvs[from.row].notify_all();
+    col_cvs[from.col].notify_all();
 }
 
 // logic
@@ -112,21 +115,23 @@ void Board::run_rook(Rook& rook, int move_limit, std::latch& start_latch) {
 
     while (rook.move_count < move_limit) {
         std::unique_lock lock(board_mutex);
-        auto dest = get_random_cell(rook);
 
-        if (!has_free_path(rook.cell, dest)) {
+        const auto from = rook.cell;
+        const auto dest = get_random_cell(rook);
+
+        if (!has_free_path(from, dest)) {
             log_blocked(rook, dest);
-            bool freed = board_changed.wait_for(lock, std::chrono::seconds(5), [&] { return has_free_path(rook.cell, dest); });
+            bool horizontal = (dest.row == from.row);
+            auto& cv = horizontal ? row_cvs[rook.cell.row] : col_cvs[rook.cell.col];
+            bool freed = cv.wait_for(lock, std::chrono::seconds(5), [&] { return has_free_path(rook.cell, dest); });
             if (!freed) {
                 log_timeout(rook, dest);
                 continue;
             }
         }
 
-        auto from = rook.cell;
         move_rook_to_cell(rook, dest);
         lock.unlock();
-        board_changed.notify_all();
 
         log_move(rook, from);
 

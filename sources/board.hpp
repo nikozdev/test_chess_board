@@ -5,6 +5,7 @@
 #include <condition_variable>
 #include <iostream>
 #include <latch>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <thread>
@@ -71,5 +72,6 @@ private: // members
 
     std::mutex board_mutex;
     std::mutex print_mutex;
-    std::condition_variable board_changed;
+    std::array<std::condition_variable, BOARD_SIZE> row_cvs;
+    std::array<std::condition_variable, BOARD_SIZE> col_cvs;
 };
