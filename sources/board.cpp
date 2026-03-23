@@ -93,8 +93,6 @@ void Board::move_rook_to_cell(Rook& rook, Cell dest) {
     rook.cell = dest;
     rook.move_count++;
     grid[dest.row][dest.col] = &rook;
-    row_cvs[from.row].notify_all();
-    col_cvs[from.col].notify_all();
 }
 
 // logic
@@ -132,6 +130,8 @@ void Board::run_rook(Rook& rook, int move_limit, std::latch& start_latch) {
 
         move_rook_to_cell(rook, dest);
         lock.unlock();
+        row_cvs[from.row].notify_all();
+        col_cvs[from.col].notify_all();
 
         log_move(rook, from);
 
