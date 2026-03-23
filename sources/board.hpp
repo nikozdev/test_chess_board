@@ -7,7 +7,6 @@
 #include <latch>
 #include <memory>
 #include <mutex>
-#include <random>
 #include <thread>
 #include <vector>
 
@@ -65,10 +64,6 @@ public:
 private: // members
 
     std::array<std::array<Rook*, BOARD_SIZE>, BOARD_SIZE> grid;
-
-    std::random_device randevice;
-    std::mt19937 randengine;
-    std::uniform_int_distribution<int> randist;
 
     std::mutex board_mutex;
     std::mutex print_mutex;
