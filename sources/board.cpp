@@ -1,14 +1,19 @@
 #include "board.hpp"
 
-Board::Board() :
-    grid{},
-    randevice(),
-    randengine(randevice()),
-    randist(0, BOARD_SIZE - 1)
-{
+#include <random>
+#include <chrono>
+#include <iostream>
+#include <thread>
+
+Board::Board() : grid{} {
     for (auto& row : grid) {
         row.fill(nullptr);
     }
+}
+
+static std::mt19937& get_rng() {
+    thread_local std::mt19937 engine(std::random_device{}());
+    return engine;
 }
 
 // checkers
@@ -40,43 +45,38 @@ bool Board::has_free_path(Cell from, Cell dest) const {
 
 // getters
 
-Rook* Board::get_cell_rook(Cell cell) const {
-    return grid[cell.row][cell.col];
-}
-
 Cell Board::get_random_cell(const Rook& rook) {
-    bool hor = randist(randengine) % 2 == 0;
-    int pos = randist(randengine);
+    std::uniform_int_distribution<int> dist(0, BOARD_SIZE - 1);
+    auto& rng = get_rng();
+
+    bool hor = dist(rng) % 2 == 0;
+    int pos = dist(rng);
+
     if (hor) {
-        while (pos == rook.cell.col) {
-            pos = randist(randengine);
-        }
+        while (pos == rook.cell.col) pos = dist(rng);
         return {pos, rook.cell.row};
     } else {
-        while (pos == rook.cell.row) {
-            pos = randist(randengine);
-        }
+        while (pos == rook.cell.row) pos = dist(rng);
         return {rook.cell.col, pos};
     }
 }
 
 int Board::get_random_pause() {
-    std::uniform_int_distribution<int> pause_dist(200, 300);
-    return pause_dist(randengine);
+    std::uniform_int_distribution<int> dist(200, 300);
+    return dist(get_rng());
 }
 
 // setters
 
-void Board::set_cell_rook(Cell cell, Rook* rook) {
-    grid[cell.row][cell.col] = rook;
-}
-
 void Board::place_rooks_random(std::vector<Rook>& rooks) {
+    std::uniform_int_distribution<int> dist(0, BOARD_SIZE - 1);
+    auto& rng = get_rng();
+
     for (auto& rook : rooks) {
         Cell cell;
         do {
-            cell.col = randist(randengine);
-            cell.row = randist(randengine);
+            cell.col = dist(rng);
+            cell.row = dist(rng);
         } while (!has_free_cell(cell));
         rook.cell = cell;
         place_rook_at_cell(rook);
@@ -87,11 +87,12 @@ void Board::place_rook_at_cell(Rook& rook) {
     grid[rook.cell.row][rook.cell.col] = &rook;
 }
 
-void Board::move_rook_to_cell(Rook& rook, Cell cell) {
-    grid[rook.cell.row][rook.cell.col] = nullptr;
-    rook.cell = cell;
+void Board::move_rook_to_cell(Rook& rook, Cell dest) {
+    Cell from = rook.cell;
+    grid[from.row][from.col] = nullptr;
+    rook.cell = dest;
     rook.move_count++;
-    grid[cell.row][cell.col] = &rook;
+    grid[dest.row][dest.col] = &rook;
 }
 
 // logic
@@ -111,22 +112,26 @@ void Board::run_rook(Rook& rook, int move_limit, std::latch& start_latch) {
     start_latch.arrive_and_wait();
 
     while (rook.move_count < move_limit) {
-        std::unique_lock lock(board_mutex);
-        auto dest = get_random_cell(rook);
+        const auto dest = get_random_cell(rook);
 
-        if (!has_free_path(rook.cell, dest)) {
+        std::unique_lock lock(board_mutex);
+        const auto from = rook.cell;
+
+        if (!has_free_path(from, dest)) {
             log_blocked(rook, dest);
-            bool freed = board_changed.wait_for(lock, std::chrono::seconds(5), [&] { return has_free_path(rook.cell, dest); });
+            bool horizontal = (dest.row == from.row);
+            auto& cv = horizontal ? row_cvs[rook.cell.row] : col_cvs[rook.cell.col];
+            bool freed = cv.wait_for(lock, std::chrono::seconds(5), [&] { return has_free_path(rook.cell, dest); });
             if (!freed) {
                 log_timeout(rook, dest);
                 continue;
             }
         }
 
-        auto from = rook.cell;
         move_rook_to_cell(rook, dest);
         lock.unlock();
-        board_changed.notify_all();
+        row_cvs[from.row].notify_all();
+        col_cvs[from.col].notify_all();
 
         log_move(rook, from);
 

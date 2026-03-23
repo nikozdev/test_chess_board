@@ -1,13 +1,9 @@
 #pragma once
 
 #include <array>
-#include <chrono>
 #include <condition_variable>
-#include <iostream>
 #include <latch>
 #include <mutex>
-#include <random>
-#include <thread>
 #include <vector>
 
 constexpr int BOARD_SIZE = 8;
@@ -34,13 +30,11 @@ public:
 
     // getters
 
-    Rook* get_cell_rook(Cell cell) const;
     Cell get_random_cell(const Rook& rook);
     int get_random_pause();
 
     // setters
 
-    void set_cell_rook(Cell cell, Rook* rook);
     void place_rooks_random(std::vector<Rook>& rooks);
     void place_rook_at_cell(Rook& rook);
     void move_rook_to_cell(Rook& rook, Cell cell);
@@ -65,11 +59,8 @@ private: // members
 
     std::array<std::array<Rook*, BOARD_SIZE>, BOARD_SIZE> grid;
 
-    std::random_device randevice;
-    std::mt19937 randengine;
-    std::uniform_int_distribution<int> randist;
-
     std::mutex board_mutex;
     std::mutex print_mutex;
-    std::condition_variable board_changed;
+    std::array<std::condition_variable, BOARD_SIZE> row_cvs;
+    std::array<std::condition_variable, BOARD_SIZE> col_cvs;
 };
