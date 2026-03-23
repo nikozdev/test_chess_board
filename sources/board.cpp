@@ -42,10 +42,6 @@ bool Board::has_free_path(Cell from, Cell dest) const {
 
 // getters
 
-Rook* Board::get_cell_rook(Cell cell) const {
-    return grid[cell.row][cell.col];
-}
-
 Cell Board::get_random_cell(const Rook& rook) {
     std::uniform_int_distribution<int> dist(0, BOARD_SIZE - 1);
     auto& rng = get_rng();
@@ -68,10 +64,6 @@ int Board::get_random_pause() {
 }
 
 // setters
-
-void Board::set_cell_rook(Cell cell, Rook* rook) {
-    grid[cell.row][cell.col] = rook;
-}
 
 void Board::place_rooks_random(std::vector<Rook>& rooks) {
     std::uniform_int_distribution<int> dist(0, BOARD_SIZE - 1);

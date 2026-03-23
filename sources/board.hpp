@@ -34,13 +34,11 @@ public:
 
     // getters
 
-    Rook* get_cell_rook(Cell cell) const;
     Cell get_random_cell(const Rook& rook);
     int get_random_pause();
 
     // setters
 
-    void set_cell_rook(Cell cell, Rook* rook);
     void place_rooks_random(std::vector<Rook>& rooks);
     void place_rook_at_cell(Rook& rook);
     void move_rook_to_cell(Rook& rook, Cell cell);
