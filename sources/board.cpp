@@ -1,6 +1,9 @@
 #include "board.hpp"
 
 #include <random>
+#include <chrono>
+#include <iostream>
+#include <thread>
 
 Board::Board() : grid{} {
     for (auto& row : grid) {

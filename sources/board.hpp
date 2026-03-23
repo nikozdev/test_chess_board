@@ -1,13 +1,9 @@
 #pragma once
 
 #include <array>
-#include <chrono>
 #include <condition_variable>
-#include <iostream>
 #include <latch>
-#include <memory>
 #include <mutex>
-#include <thread>
 #include <vector>
 
 constexpr int BOARD_SIZE = 8;
